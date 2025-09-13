@@ -10,7 +10,7 @@ class PersonalityProfile:
     
     # Identité de base
     name: str
-    gender: str  # "M", "F", "NB"
+    gender: str  # "M", "F"
     age: int
     location: Dict[str, str]  # {"city": "Lyon", "region": "69", "country": "France"}
     
@@ -130,8 +130,8 @@ class PersonalityManager:
         
         # Extraction des valeurs de config avec fallbacks
         gender = config_data.get('gender', '').upper()
-        if gender not in ['M', 'F', 'NB']:
-            gender = random.choice(['M', 'F', 'NB'])
+        if gender not in ['M', 'F']:
+            gender = random.choice(['M', 'F'])  # 50/50 homme/femme seulement
         
         age = config_data.get('age', 0)
         if age <= 0:
@@ -149,10 +149,8 @@ class PersonalityManager:
         # Noms selon le genre
         if gender == "M":
             names = ["Alex", "Thomas", "Nicolas", "Julien", "Maxime", "Antoine", "Pierre", "Paul", "Louis", "Hugo", "Lucas", "Nathan", "Enzo", "Léo", "Gabriel", "Arthur", "Jules", "Ethan", "Noah", "Tom"]
-        elif gender == "F":
+        else:  # F
             names = ["Emma", "Jade", "Louise", "Alice", "Chloé", "Lina", "Léa", "Manon", "Julia", "Zoé", "Camille", "Sarah", "Eva", "Inès", "Jeanne", "Margot", "Adèle", "Anna", "Rose", "Clara"]
-        else:  # NB
-            names = ["Alex", "Sam", "Charlie", "Jordan", "Casey", "Morgan", "Taylor", "River", "Sage", "Quinn"]
         
         name = config_data.get('name', '').strip()
         if not name:
@@ -244,15 +242,13 @@ class PersonalityManager:
             {"city": "Le Havre", "region": "76", "country": "France"}
         ]
         
-        gender = random.choice(["M", "F", "NB"])
+        gender = random.choice(["M", "F"])
         
         # Noms selon le genre
         if gender == "M":
             names = ["Alex", "Thomas", "Nicolas", "Julien", "Maxime", "Antoine", "Pierre", "Paul", "Louis", "Hugo", "Lucas", "Nathan", "Enzo", "Léo", "Gabriel", "Arthur", "Jules", "Ethan", "Noah", "Tom"]
-        elif gender == "F":
+        else:  # F
             names = ["Emma", "Jade", "Louise", "Alice", "Chloé", "Lina", "Léa", "Manon", "Julia", "Zoé", "Camille", "Sarah", "Eva", "Inès", "Jeanne", "Margot", "Adèle", "Anna", "Rose", "Clara"]
-        else:  # NB
-            names = ["Alex", "Sam", "Charlie", "Jordan", "Casey", "Morgan", "Taylor", "River", "Sage", "Quinn"]
         
         interests_pool = [
             "jeux vidéo", "cinéma", "musique", "sport", "lecture", "cuisine", "voyages", 
@@ -294,7 +290,6 @@ class PersonalityManager:
         gender_text = {
             "M": "Tu es un homme",
             "F": "Tu es une femme", 
-            "NB": "Tu es non-binaire"
         }[p.gender]
         
         context = f"""{gender_text} de {p.age} ans qui s'appelle {p.name}.

@@ -39,7 +39,7 @@ ai:
 personality:
   # Identité (laisser vide pour génération aléatoire)
   name: ""           # Ex: "Alex", "Marie"  
-  gender: ""         # "M", "F", ou "NB"
+  gender: ""         # "M" ou "F" - vide = aléatoire
   age: 0             # 16-45, 0 = aléatoire
   
   # Localisation (laisser vide pour aléatoire français)

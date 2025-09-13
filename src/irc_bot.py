@@ -335,10 +335,8 @@ class IrcHumanizerBot:
         
         if gender == "M":
             return clean_nickname in male_names
-        elif gender == "F":
+        else:  # "F"
             return clean_nickname in female_names
-        else:  # "NB"
-            return True  # Accepter n'importe quel nom pour non-binaire
     
     def _get_gender_appropriate_name(self, gender: str) -> str:
         """Retourne un prénom approprié au genre"""
@@ -365,17 +363,10 @@ class IrcHumanizerBot:
             "Nina", "Rose", "Anna", "Lola", "Eva", "Noa", "Romy", "Mila", "Lou"
         ]
         
-        neutral_names = [
-            "Alex", "Charlie", "Jordan", "Taylor", "Casey", "Riley", "Avery",
-            "Quinn", "Sage", "River", "Phoenix", "Rowan", "Dylan", "Cameron"
-        ]
-        
         if gender == "M":
             return random.choice(male_names)
-        elif gender == "F":
+        else:  # "F"
             return random.choice(female_names)
-        else:  # "NB"
-            return random.choice(neutral_names)
     
     def _generate_personality_realname(self) -> str:
         """Génère un realname IRC basé sur la personnalité du bot"""
