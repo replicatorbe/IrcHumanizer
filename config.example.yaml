@@ -10,7 +10,7 @@ irc:
   # Identité du bot
   nickname: "MonHumain"         # "MonHumain" = génération auto, sinon utilise ce nom
   username: "monhumain"
-  realname: "Un utilisateur normal"  # Sera remplacé par la personnalité
+  realname: "Un utilisateur normal"  # Sera remplacé par la personnalité (ex: "25 H Lyon")
   
   # Automatisation de l'identité
   auto_personality_identity: true  # true = nickname/realname selon personnalité

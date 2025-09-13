@@ -322,9 +322,13 @@ class IrcHumanizerBot:
             "Lausanne": "Laus", "Zurich": "Zur", "Bern": "Bern", "Berne": "Bern"
         }
         
-        # Format: age sexe ville (ex: "24 F Lyon")
+        # Format: age sexe ville (ex: "24 H Lyon", "24 F Lyon")
         city_abbrev = city_abbreviations.get(profile.location["city"], profile.location["city"][:4])
-        return f"{profile.age} {profile.gender} {city_abbrev}"
+        
+        # Conversion M -> H pour plus naturel
+        gender_display = "H" if profile.gender == "M" else profile.gender
+        
+        return f"{profile.age} {gender_display} {city_abbrev}"
     
     async def disconnect(self):
         """Ferme la connexion"""
