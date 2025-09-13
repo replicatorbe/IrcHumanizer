@@ -375,7 +375,7 @@ Tu participes à une {context_type} et réponds naturellement.
         ]
         
         # Réponses selon l'humeur
-        mood = self.personality.current_mood if self.personality else "neutral"
+        mood = self.personality.profile.current_mood if self.personality else "neutral"
         
         if mood == "good":
             mood_responses = [
@@ -489,7 +489,7 @@ Tu participes à une {context_type} et réponds naturellement.
                 ]
         
         # Questions selon l'humeur
-        mood = self.personality.current_mood if self.personality else "neutral"
+        mood = self.personality.profile.current_mood if self.personality else "neutral"
         mood_questions = []
         
         if mood == "good":
