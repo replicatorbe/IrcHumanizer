@@ -1,6 +1,8 @@
 import random
+import datetime
+import json
 from typing import Dict, List, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 @dataclass
 class PersonalityProfile:
@@ -29,6 +31,10 @@ class PersonalityProfile:
     # Expressions favorites
     expressions: List[str]
     greetings: List[str]
+    
+    # Humeur actuelle (variable)
+    current_mood: str = "normal"  # "good", "normal", "bad", "tired", "excited"
+    mood_intensity: float = 0.5   # 0.0 à 1.0
 
 class PersonalityManager:
     """Gestionnaire de personnalité du bot"""
@@ -400,3 +406,102 @@ Style d'écriture préféré: {', '.join(p.writing_styles)}
             else:
                 return f"j'ai {age} ans, ça passe encore"
         return None
+    
+    def update_mood(self):
+        """Met à jour l'humeur du bot de façon aléatoire"""
+        # Changement d'humeur aléatoire (5% de chance)
+        if random.random() < 0.05:
+            moods = ["good", "normal", "bad", "tired", "excited"]
+            self.profile.current_mood = random.choice(moods)
+            self.profile.mood_intensity = random.uniform(0.3, 1.0)
+    
+    def get_mood_modifier(self) -> float:
+        """Retourne un modificateur basé sur l'humeur actuelle"""
+        mood_modifiers = {
+            "good": 1.2,     # Plus de réponses positives
+            "normal": 1.0,   # Comportement normal
+            "bad": 0.7,      # Moins de réponses, plus bref
+            "tired": 0.8,    # Réponses plus courtes
+            "excited": 1.3   # Plus de réponses, plus d'émojis
+        }
+        base_modifier = mood_modifiers.get(self.profile.current_mood, 1.0)
+        return base_modifier * self.profile.mood_intensity
+    
+    def get_irc_action(self) -> Optional[str]:
+        """Génère une action IRC aléatoire (/me) selon l'humeur"""
+        if random.random() > 0.98:  # 2% de chance d'action spontanée
+            actions_by_mood = {
+                "good": [
+                    "sourit",
+                    "est de bonne humeur",
+                    "boit un café ☕",
+                    "écoute de la musique 🎵",
+                    "est content",
+                ],
+                "normal": [
+                    "regarde par la fenêtre",
+                    "boit un verre d'eau",
+                    "vérifie ses messages",
+                    "étire ses bras",
+                    "réfléchit",
+                ],
+                "bad": [
+                    "soupire",
+                    "est un peu énervé",
+                    "fronce les sourcils",
+                    "a pas le moral",
+                    "boude un peu",
+                ],
+                "tired": [
+                    "baille",
+                    "est fatigué",
+                    "se frotte les yeux",
+                    "a envie de dormir",
+                    "s'étire",
+                ],
+                "excited": [
+                    "est surexcité !",
+                    "n'arrive pas à tenir en place",
+                    "est hypé 🔥",
+                    "a la pêche !",
+                    "est motivé à fond",
+                ]
+            }
+            
+            mood_actions = actions_by_mood.get(self.profile.current_mood, actions_by_mood["normal"])
+            return random.choice(mood_actions)
+        
+        return None
+    
+    def adapt_response_with_mood(self, text: str) -> str:
+        """Adapte une réponse selon l'humeur actuelle"""
+        mood_modifier = self.get_mood_modifier()
+        result = text
+        
+        # Appliquer les effets de l'humeur
+        if self.profile.current_mood == "bad":
+            # Plus bref, moins d'émojis
+            if len(result) > 20 and random.random() < 0.3:
+                words = result.split()
+                result = " ".join(words[:len(words)//2]) if len(words) > 3 else result
+        
+        elif self.profile.current_mood == "excited":
+            # Plus d'émojis et de ponctuation
+            if random.random() < 0.4:
+                excited_emojis = ["!", "!!", " 🔥", " 💯", " 😎", " ✨"]
+                result += random.choice(excited_emojis)
+        
+        elif self.profile.current_mood == "tired":
+            # Plus de points de suspension, moins énergique
+            if random.random() < 0.3:
+                result = result.replace("!", ".").replace("?", "...")
+                if not result.endswith("..."):
+                    result += "..."
+        
+        elif self.profile.current_mood == "good":
+            # Plus positif, émojis positifs
+            if random.random() < 0.3:
+                good_emojis = [" 😊", " 🙂", " 👍", " ✌️"]
+                result += random.choice(good_emojis)
+        
+        return result

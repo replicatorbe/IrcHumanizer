@@ -6,6 +6,7 @@ import ssl
 from typing import Optional
 from .config import Config
 from .human_generator import HumanResponseGenerator
+from .activity_manager import ActivityManager
 
 class IrcHumanizerBot:
     """Bot IRC principal qui imite un utilisateur humain"""
@@ -17,6 +18,7 @@ class IrcHumanizerBot:
         self.writer: Optional[asyncio.StreamWriter] = None
         self.connected = False
         self.human_generator = HumanResponseGenerator(config)
+        self.activity_manager = ActivityManager(config_data=config.activity_config)
         
     async def start(self):
         """Démarre le bot et maintient la connexion"""
@@ -68,6 +70,10 @@ class IrcHumanizerBot:
     async def send_message(self, target: str, message: str):
         """Envoie un message à un salon ou utilisateur"""
         await self.send_raw(f"PRIVMSG {target} :{message}")
+    
+    async def send_action(self, target: str, action: str):
+        """Envoie une action IRC (/me) à un salon ou utilisateur"""
+        await self.send_raw(f"PRIVMSG {target} :\x01ACTION {action}\x01")
     
     async def join_channel(self, channel: str):
         """Rejoint un salon"""
@@ -138,12 +144,41 @@ class IrcHumanizerBot:
         
         self.logger.info(f"[{target}] <{sender}> {message}")
         
-        # Décider si on doit répondre (probabilité configurable)
-        if random.random() > self.config.response_probability:
+        # Vérifier si on simule une absence
+        absence_reason = self.activity_manager.simulate_random_absence()
+        if absence_reason:
+            await self.send_action(target, absence_reason)
+            self.logger.info(f"[{target}] * {self.config.nickname} {absence_reason}")
             return
         
-        # Attendre un délai aléatoire pour simuler le temps de frappe
-        delay = random.uniform(
+        # Vérifier si on revient d'absence
+        return_message = self.activity_manager.get_return_message()
+        if return_message:
+            await self.send_message(target, return_message)
+            self.logger.info(f"[{target}] <{self.config.nickname}> {return_message}")
+            return
+        
+        # Mettre à jour l'humeur du bot
+        self.human_generator.personality.update_mood()
+        
+        # Vérifier si le bot fait une action spontanée
+        action = self.human_generator.personality.get_irc_action()
+        if action:
+            action_delay = random.uniform(0.5, 2.0)
+            await asyncio.sleep(action_delay)
+            await self.send_action(target, action)
+            self.logger.info(f"[{target}] * {self.config.nickname} {action}")
+            return  # Action au lieu de réponse
+        
+        # Décider si on doit répondre (probabilité modifiée par humeur + activité)
+        mood_modifier = self.human_generator.personality.get_mood_modifier()
+        base_probability = self.config.response_probability * mood_modifier
+        
+        if not self.activity_manager.should_respond(base_probability):
+            return
+        
+        # Attendre un délai adaptatif selon l'heure et l'activité
+        delay = self.activity_manager.get_adaptive_delay(
             self.config.min_response_delay,
             self.config.max_response_delay
         )
@@ -154,6 +189,7 @@ class IrcHumanizerBot:
         
         if response:
             await self.send_message(target, response)
+            self.activity_manager.record_response()  # Enregistrer pour anti-détection
             self.logger.info(f"[{target}] <{self.config.nickname}> {response}")
     
     async def disconnect(self):

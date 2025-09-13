@@ -29,6 +29,9 @@ class Config:
     # Configuration personnalité (optionnelle)
     personality_config: Optional[Dict[str, Any]]
     
+    # Configuration activité (optionnelle)
+    activity_config: Optional[Dict[str, Any]]
+    
     @classmethod
     def load_from_file(cls, config_path: str) -> 'Config':
         """Charge la configuration depuis un fichier YAML"""
@@ -56,7 +59,8 @@ class Config:
             max_response_delay=data['behavior'].get('max_response_delay', 5.0),
             ai_api_key=data['ai'].get('api_key', ''),
             ai_model=data['ai'].get('model', 'gpt-3.5-turbo'),
-            personality_config=data.get('personality')
+            personality_config=data.get('personality'),
+            activity_config=data.get('activity')
         )
     
     @staticmethod

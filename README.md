@@ -48,8 +48,13 @@ personality:
 - **Styles d'écriture variés** : SMS, argot, correct, old-school
 - **Analyse de personnalité** des utilisateurs pour adapter les réponses
 - **Réponses avec fautes** d'orthographe intentionnelles
-- **Délais aléatoires** pour simuler la frappe
-- **Probabilité de réponse** configurable
+- **Actions IRC** (/me) selon l'humeur : "* mange un sandwich"
+- **Système d'humeur** : good/bad/tired/excited qui influence les réponses
+- **Horaires d'activité** : plus/moins actif selon l'heure et le jour
+- **Anti-détection** : évite de répondre trop souvent
+- **Absences simulées** : "brb", "va chercher un café"
+- **Délais adaptatifs** : plus rapide aux heures de pointe
+- **Probabilité de réponse** configurable par humeur/activité
 - **Sauvegarde automatique** des conversations
 
 ## Utilisation
@@ -70,10 +75,11 @@ python main.py
 python memory_stats.py
 ```
 
-### Tester la personnalité du bot
+### Tester les systèmes du bot
 ```bash
 python personality_test.py          # 3 personnalités aléatoires
 python test_config_personality.py   # Test avec config personnalisée
+python activity_test.py            # Test horaires et anti-détection
 ```
 
 ## Structure
@@ -83,8 +89,10 @@ python test_config_personality.py   # Test avec config personnalisée
 - `src/config.py` : Système de configuration YAML
 - `src/human_generator.py` : IA + génération de réponses humaines
 - `src/memory_manager.py` : Mémoire contextuelle par salon/utilisateur
-- `src/personality.py` : Système de personnalité complète
+- `src/personality.py` : Système de personnalité + humeur
+- `src/activity_manager.py` : Horaires d'activité + anti-détection
 - `memory_stats.py` : Outil de visualisation des statistiques
 - `personality_test.py` : Test et affichage de la personnalité
 - `test_config_personality.py` : Test avec configuration personnalisée
+- `activity_test.py` : Test des horaires et anti-détection
 - `config.personal.example.yaml` : Exemple de config avec personnalité

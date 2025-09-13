@@ -150,8 +150,9 @@ class HumanResponseGenerator:
             try:
                 ai_response = await self._get_ai_response(message, sender, target, is_private)
                 if ai_response:
-                    # Adapter selon la personnalité et ajouter à la mémoire
+                    # Adapter selon la personnalité, humeur et ajouter à la mémoire
                     human_response = self.personality.adapt_response_style(ai_response)
+                    human_response = self.personality.adapt_response_with_mood(human_response)
                     human_response = self._add_human_touches(human_response)
                     self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                           human_response, is_private, is_bot=True)
@@ -167,8 +168,9 @@ class HumanResponseGenerator:
             response = random.choice(self.personality.profile.greetings)
             if sender:
                 response += f" {sender}"
-            # Appliquer personnalité + touches humaines
+            # Appliquer personnalité + humeur + touches humaines
             response = self.personality.adapt_response_style(response)
+            response = self.personality.adapt_response_with_mood(response)
             response = self._add_human_touches(response)
             self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                   response, is_private, is_bot=True)
@@ -180,8 +182,9 @@ class HumanResponseGenerator:
         else:
             base_response = random.choice(self.casual_responses)
         
-        # Appliquer personnalité + touches humaines
+        # Appliquer personnalité + humeur + touches humaines
         response = self.personality.adapt_response_style(base_response)
+        response = self.personality.adapt_response_with_mood(response)
         response = self._add_human_touches(response)
         
         # Ajouter à la mémoire
