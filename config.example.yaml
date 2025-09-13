@@ -8,7 +8,7 @@ irc:
   ssl: true
   
   # Identité du bot
-  nickname: "MonHumain"         # Si pas "MonHumain", utilise ce nom
+  nickname: "MonHumain"         # "MonHumain" = génération auto, sinon utilise ce nom
   username: "monhumain"
   realname: "Un utilisateur normal"  # Sera remplacé par la personnalité
   

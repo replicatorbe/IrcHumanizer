@@ -211,12 +211,14 @@ class IrcHumanizerBot:
         """Génère un nickname IRC basé sur la personnalité du bot"""
         profile = self.human_generator.personality.profile
         
-        # Si un nickname personnalisé est défini, on l'utilise
+        # Si un nickname personnalisé est défini ET qu'il correspond au genre, on l'utilise
         if hasattr(self.config, 'nickname') and self.config.nickname != "MonHumain":
-            return self.config.nickname
+            # Vérifier si le nickname correspond au genre de la personnalité
+            if self._nickname_matches_gender(self.config.nickname, profile.gender):
+                return self.config.nickname
         
-        # Sinon on utilise le prénom de la personnalité
-        base_name = profile.name
+        # Sinon générer un nickname approprié au genre
+        base_name = self._get_gender_appropriate_name(profile.gender)
         
         # Variations possibles du prénom pour IRC
         import random
@@ -228,6 +230,77 @@ class IrcHumanizerBot:
         ]
         
         return random.choice(variations)
+    
+    def _nickname_matches_gender(self, nickname: str, gender: str) -> bool:
+        """Vérifie si un nickname correspond au genre"""
+        # Listes de prénoms pour vérification
+        male_names = [
+            "Alex", "Alexandre", "Pierre", "Paul", "Jean", "Michel", "Nicolas", 
+            "David", "Thomas", "Julien", "Antoine", "Laurent", "Sebastien",
+            "Christophe", "Stephane", "Vincent", "Pascal", "Olivier", "Bruno",
+            "Philippe", "Fabrice", "Thierry", "Patrice", "Romain", "Maxime",
+            "Kevin", "Jeremy", "Florian", "Damien", "Cedric", "Gregory",
+            "Mathieu", "Benjamin", "Lucas", "Hugo", "Leo", "Nathan", "Noah",
+            "Arthur", "Louis", "Gabriel", "Raphael", "Adam", "Victor", "Jules",
+            "Theo", "Ethan", "Nolan", "Clement", "Oscar", "Aaron", "Diego"
+        ]
+        
+        female_names = [
+            "Marie", "Sophie", "Anne", "Catherine", "Isabelle", "Nathalie",
+            "Sylvie", "Stephanie", "Christine", "Sandrine", "Valerie", "Patricia",
+            "Celine", "Aurelie", "Laetitia", "Carole", "Emilie", "Julie",
+            "Laurence", "Veronique", "Virginie", "Corinne", "Delphine", "Martine",
+            "Emma", "Jade", "Louise", "Alice", "Chloe", "Lina", "Lea", "Manon",
+            "Clara", "Camille", "Sarah", "Ines", "Zoe", "Lily", "Elena", "Mia",
+            "Nina", "Rose", "Anna", "Lola", "Eva", "Noa", "Romy", "Mila", "Lou"
+        ]
+        
+        # Nettoyer le nickname (enlever chiffres et underscores)
+        clean_nickname = nickname.split('_')[0].rstrip('0123456789')
+        
+        if gender == "M":
+            return clean_nickname in male_names
+        elif gender == "F":
+            return clean_nickname in female_names
+        else:  # "NB"
+            return True  # Accepter n'importe quel nom pour non-binaire
+    
+    def _get_gender_appropriate_name(self, gender: str) -> str:
+        """Retourne un prénom approprié au genre"""
+        import random
+        
+        male_names = [
+            "Alexandre", "Pierre", "Paul", "Jean", "Michel", "Nicolas", 
+            "David", "Thomas", "Julien", "Antoine", "Laurent", "Sebastien",
+            "Christophe", "Stephane", "Vincent", "Pascal", "Olivier", "Bruno",
+            "Philippe", "Fabrice", "Thierry", "Patrice", "Romain", "Maxime",
+            "Kevin", "Jeremy", "Florian", "Damien", "Cedric", "Gregory",
+            "Mathieu", "Benjamin", "Lucas", "Hugo", "Leo", "Nathan", "Noah",
+            "Arthur", "Louis", "Gabriel", "Raphael", "Adam", "Victor", "Jules",
+            "Theo", "Ethan", "Nolan", "Clement", "Oscar", "Aaron", "Diego"
+        ]
+        
+        female_names = [
+            "Marie", "Sophie", "Anne", "Catherine", "Isabelle", "Nathalie",
+            "Sylvie", "Stephanie", "Christine", "Sandrine", "Valerie", "Patricia",
+            "Celine", "Aurelie", "Laetitia", "Carole", "Emilie", "Julie",
+            "Laurence", "Veronique", "Virginie", "Corinne", "Delphine", "Martine",
+            "Emma", "Jade", "Louise", "Alice", "Chloe", "Lina", "Lea", "Manon",
+            "Clara", "Camille", "Sarah", "Ines", "Zoe", "Lily", "Elena", "Mia",
+            "Nina", "Rose", "Anna", "Lola", "Eva", "Noa", "Romy", "Mila", "Lou"
+        ]
+        
+        neutral_names = [
+            "Alex", "Charlie", "Jordan", "Taylor", "Casey", "Riley", "Avery",
+            "Quinn", "Sage", "River", "Phoenix", "Rowan", "Dylan", "Cameron"
+        ]
+        
+        if gender == "M":
+            return random.choice(male_names)
+        elif gender == "F":
+            return random.choice(female_names)
+        else:  # "NB"
+            return random.choice(neutral_names)
     
     def _generate_personality_realname(self) -> str:
         """Génère un realname IRC basé sur la personnalité du bot"""

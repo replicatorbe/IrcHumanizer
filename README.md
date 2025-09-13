@@ -20,6 +20,17 @@ cp config.example.yaml config.yaml
 nano config.yaml
 ```
 
+### Identité IRC automatique
+```yaml
+irc:
+  nickname: "MonHumain"              # Déclenche génération automatique
+  auto_personality_identity: true    # Active génération nick/realname
+```
+
+- **nickname: "MonHumain"** → Génère automatiquement un prénom cohérent avec le genre (ex: Pierre_25, Sarah69, Marie_Lyon)
+- **nickname personnalisé** → Utilise ce nom s'il correspond au genre de la personnalité
+- **auto_personality_identity: false** → Utilise les valeurs fixes de la config
+
 ### Personnalité personnalisée (optionnel)
 ```yaml
 personality:
