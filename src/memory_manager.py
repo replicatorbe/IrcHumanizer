@@ -20,8 +20,9 @@ class ConversationMemory:
         # Mémoire des utilisateurs: {username: {infos personnelles}}
         self.users_info: Dict[str, Dict] = defaultdict(dict)
         
-        # Charger la mémoire existante
-        self.load_memory()
+        # NOUVELLE PERSONNALITÉ = NOUVELLE MÉMOIRE (éviter détection bot)
+        self.clear_memory()
+        self.logger.info("Mémoire effacée - nouvelle personnalité, nouveaux souvenirs")
     
     def _get_context_id(self, target: str, is_private: bool = False) -> str:
         """Génère un ID de contexte unique"""
@@ -337,6 +338,21 @@ class ConversationMemory:
         except Exception as e:
             self.logger.error(f"Erreur lors du chargement de la mémoire: {e}")
             self.conversations = defaultdict(lambda: deque(maxlen=self.max_messages))
+    
+    def clear_memory(self):
+        """Efface complètement la mémoire (nouvelle personnalité = nouveau départ)"""
+        try:
+            # Supprimer le fichier de mémoire s'il existe
+            if os.path.exists(self.memory_file):
+                os.remove(self.memory_file)
+                self.logger.info(f"Fichier de mémoire {self.memory_file} supprimé")
+            
+            # Réinitialiser les structures en mémoire
+            self.conversations.clear()
+            self.users_info.clear()
+            
+        except Exception as e:
+            self.logger.error(f"Erreur lors de l'effacement de la mémoire: {e}")
     
     def get_stats(self) -> Dict[str, any]:
         """Retourne des statistiques sur la mémoire"""
