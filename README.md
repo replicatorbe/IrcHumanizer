@@ -43,6 +43,7 @@ personality:
 - **Connexion IRC automatique** avec support SSL
 - **Intégration IA ChatGPT** avec fallback vers réponses prédéfinies
 - **Personnalité complète** : nom, âge, genre, localisation, style d'écriture
+- **Identité IRC automatique** : nickname/realname basés sur la personnalité
 - **Mémoire contextuelle** : se souvient des conversations par salon/privé
 - **Géolocalisation crédible** : répond aux questions "qui du XX"
 - **Styles d'écriture variés** : SMS, argot, correct, old-school

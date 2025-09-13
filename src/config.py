@@ -26,11 +26,14 @@ class Config:
     ai_api_key: str
     ai_model: str
     
+    # Paramètres avec valeurs par défaut
+    auto_personality_identity: bool = True
+    
     # Configuration personnalité (optionnelle)
-    personality_config: Optional[Dict[str, Any]]
+    personality_config: Optional[Dict[str, Any]] = None
     
     # Configuration activité (optionnelle)
-    activity_config: Optional[Dict[str, Any]]
+    activity_config: Optional[Dict[str, Any]] = None
     
     @classmethod
     def load_from_file(cls, config_path: str) -> 'Config':
@@ -54,6 +57,7 @@ class Config:
             username=data['irc']['username'],
             realname=data['irc']['realname'],
             channels=data['irc']['channels'],
+            auto_personality_identity=data['irc'].get('auto_personality_identity', True),
             response_probability=data['behavior'].get('response_probability', 0.3),
             min_response_delay=data['behavior'].get('min_response_delay', 1.0),
             max_response_delay=data['behavior'].get('max_response_delay', 5.0),

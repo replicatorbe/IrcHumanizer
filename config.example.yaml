@@ -8,9 +8,12 @@ irc:
   ssl: true
   
   # Identité du bot
-  nickname: "MonHumain"
+  nickname: "MonHumain"         # Si pas "MonHumain", utilise ce nom
   username: "monhumain"
-  realname: "Un utilisateur normal"
+  realname: "Un utilisateur normal"  # Sera remplacé par la personnalité
+  
+  # Automatisation de l'identité
+  auto_personality_identity: true  # true = nickname/realname selon personnalité
   
   # Salons à rejoindre automatiquement
   channels:
@@ -67,7 +70,7 @@ activity:
   # Pause déjeuner  
   lunch_start: "12:00"
   lunch_end: "14:00"
-  lunch_probability: 0.3   # 30% de chance d'être absent
+  lunch_probability: 0.1   # 10% de chance d'être absent
   
   # Heures de pointe (plus actif)
   peak_hours:              # Liste des créneaux
@@ -75,4 +78,4 @@ activity:
     - "09:00-10:00"
   
   # Activité weekend (0.0 à 1.0)
-  weekend_activity_modifier: 0.7  # 70% de l'activité normale
+  weekend_activity_modifier: 0.95  # 95% de l'activité normale

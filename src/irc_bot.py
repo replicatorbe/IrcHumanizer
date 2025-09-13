@@ -46,9 +46,23 @@ class IrcHumanizerBot:
                     self.config.server, self.config.port
                 )
             
-            # Envoyer les informations d'authentification
-            await self.send_raw(f"NICK {self.config.nickname}")
-            await self.send_raw(f"USER {self.config.username} 0 * :{self.config.realname}")
+            # Utiliser l'identité de la personnalité si configuré
+            if self.config.auto_personality_identity:
+                personality_nickname = self._generate_personality_nickname()
+                personality_realname = self._generate_personality_realname()
+                
+                # Envoyer les informations d'authentification
+                await self.send_raw(f"NICK {personality_nickname}")
+                await self.send_raw(f"USER {self.config.username} 0 * :{personality_realname}")
+                
+                # Mettre à jour le nickname dans la config pour les logs
+                self.config.nickname = personality_nickname
+                
+                self.logger.info(f"Identité personnalisée: {personality_nickname} ({personality_realname})")
+            else:
+                # Utiliser l'identité de la config
+                await self.send_raw(f"NICK {self.config.nickname}")
+                await self.send_raw(f"USER {self.config.username} 0 * :{self.config.realname}")
             
             self.connected = True
             self.logger.info("Connexion établie")
@@ -173,6 +187,7 @@ class IrcHumanizerBot:
         # Décider si on doit répondre (probabilité modifiée par humeur + activité)
         mood_modifier = self.human_generator.personality.get_mood_modifier()
         base_probability = self.config.response_probability * mood_modifier
+        activity_level = self.activity_manager.get_activity_level()
         
         if not self.activity_manager.should_respond(base_probability):
             return
@@ -191,6 +206,52 @@ class IrcHumanizerBot:
             await self.send_message(target, response)
             self.activity_manager.record_response()  # Enregistrer pour anti-détection
             self.logger.info(f"[{target}] <{self.config.nickname}> {response}")
+    
+    def _generate_personality_nickname(self) -> str:
+        """Génère un nickname IRC basé sur la personnalité du bot"""
+        profile = self.human_generator.personality.profile
+        
+        # Si un nickname personnalisé est défini, on l'utilise
+        if hasattr(self.config, 'nickname') and self.config.nickname != "MonHumain":
+            return self.config.nickname
+        
+        # Sinon on utilise le prénom de la personnalité
+        base_name = profile.name
+        
+        # Variations possibles du prénom pour IRC
+        import random
+        variations = [
+            base_name,                           # Sarah
+            f"{base_name}_{profile.age}",       # Sarah_24
+            f"{base_name}{profile.location['region']}", # Sarah69
+            f"{base_name}_{profile.location['region']}", # Sarah_69
+        ]
+        
+        return random.choice(variations)
+    
+    def _generate_personality_realname(self) -> str:
+        """Génère un realname IRC basé sur la personnalité du bot"""
+        profile = self.human_generator.personality.profile
+        
+        # Abréviations de villes courantes
+        city_abbreviations = {
+            "Paris": "Paris", "Lyon": "Lyon", "Marseille": "Mars",
+            "Toulouse": "Toul", "Nice": "Nice", "Nantes": "Nant",
+            "Strasbourg": "Stras", "Montpellier": "Montp", "Bordeaux": "Bdx",
+            "Lille": "Lille", "Rennes": "Renn", "Reims": "Reims",
+            "Toulon": "Toulon", "Grenoble": "Gren", "Dijon": "Dijon",
+            "Angers": "Angers", "Nîmes": "Nimes", "Villeurbanne": "Villeurb",
+            "Clermont-Ferrand": "Clermont", "Le Havre": "LH",
+            # Ajouts internationaux
+            "Bruxelles": "Bxl", "Brussels": "Bxl", "Brüssel": "Bxl",
+            "Genève": "Gen", "Geneva": "Gen", "Genf": "Gen",
+            "Montréal": "Mtl", "Montreal": "Mtl",
+            "Lausanne": "Laus", "Zurich": "Zur", "Bern": "Bern", "Berne": "Bern"
+        }
+        
+        # Format: age sexe ville (ex: "24 F Lyon")
+        city_abbrev = city_abbreviations.get(profile.location["city"], profile.location["city"][:4])
+        return f"{profile.age} {profile.gender} {city_abbrev}"
     
     async def disconnect(self):
         """Ferme la connexion"""

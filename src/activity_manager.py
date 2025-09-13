@@ -17,13 +17,13 @@ class ActivitySettings:
     # Pauses déjeuner et autres
     lunch_start: str = "12:00"
     lunch_end: str = "14:00"
-    lunch_probability: float = 0.3  # 30% de chance d'être absent à l'heure de déj
+    lunch_probability: float = 0.1  # 10% de chance d'être absent à l'heure de déj
     
     # Horaires de pointe (plus actif)
     peak_hours: list = None  # ["19:00-22:00"] par exemple
     
     # Week-end (moins actif)
-    weekend_activity_modifier: float = 0.7  # 70% de l'activité normale
+    weekend_activity_modifier: float = 0.95  # 95% de l'activité normale
     
     def __post_init__(self):
         if self.peak_hours is None:
@@ -118,7 +118,7 @@ class ActivityManager:
     def get_activity_level(self) -> float:
         """Retourne le niveau d'activité actuel (0.0 à 2.0)"""
         if not self.is_active_hours():
-            return 0.1  # Très peu actif hors heures
+            return 0.3  # Moins actif hors heures mais pas inactif
         
         base_activity = 1.0
         
@@ -130,8 +130,8 @@ class ActivityManager:
         if self._is_peak_hours():
             base_activity *= 1.5
         
-        # Ajouter une variation aléatoire
-        variation = random.uniform(0.8, 1.2)
+        # Ajouter une variation aléatoire (plus permissive)
+        variation = random.uniform(0.9, 1.3)
         
         return base_activity * variation
     
@@ -187,7 +187,7 @@ class ActivityManager:
     
     def simulate_random_absence(self) -> Optional[str]:
         """Simule une absence aléatoire avec raison"""
-        if self.is_simulating_absence or random.random() > 0.02:  # 2% de chance
+        if self.is_simulating_absence or random.random() > 0.01:  # 1% de chance (réduit)
             return None
         
         now = self._get_current_time()
