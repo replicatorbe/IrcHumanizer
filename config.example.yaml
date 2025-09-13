@@ -1,0 +1,33 @@
+# Configuration exemple pour IrcHumanizer
+# Copiez ce fichier vers config.yaml et modifiez les valeurs
+
+irc:
+  # Serveur IRC (exemples : irc.libera.chat, irc.freenode.net)
+  server: "irc.libera.chat"
+  port: 6697
+  ssl: true
+  
+  # Identité du bot
+  nickname: "MonHumain"
+  username: "monhumain"
+  realname: "Un utilisateur normal"
+  
+  # Salons à rejoindre automatiquement
+  channels:
+    - "#test"
+    - "#general"
+
+behavior:
+  # Probabilité de répondre à un message (0.0 = jamais, 1.0 = toujours)
+  response_probability: 0.3
+  
+  # Délai avant réponse en secondes (pour simuler le temps de réflexion/frappe)
+  min_response_delay: 1.0
+  max_response_delay: 5.0
+
+ai:
+  # Clé API pour le service d'IA (utilise une variable d'environnement)
+  api_key: "${OPENAI_API_KEY}"
+  
+  # Modèle à utiliser
+  model: "gpt-3.5-turbo"
