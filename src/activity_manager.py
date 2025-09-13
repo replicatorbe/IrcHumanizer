@@ -48,6 +48,11 @@ class ActivityManager:
         self.is_simulating_absence = False
         self.absence_end_time = None
         self.absence_reason = None
+        
+        # Mode observateur/lurker
+        self.is_lurking = False
+        self.lurk_end_time = None
+        self.last_lurk_check = None
     
     def _create_settings_from_config(self, config_data: Dict) -> ActivitySettings:
         """Crée des ActivitySettings depuis la config YAML"""
@@ -139,6 +144,10 @@ class ActivityManager:
         """Détermine si le bot devrait répondre selon l'activité"""
         if self.is_simulating_absence:
             return False
+        
+        # Vérifier le mode lurker (observateur)
+        if self.simulate_lurker_mode():
+            return False  # En mode lurk, on ne répond pas
         
         activity_level = self.get_activity_level()
         adjusted_probability = base_probability * activity_level
@@ -242,6 +251,48 @@ class ActivityManager:
         ]
         
         return random.choice(return_messages)
+    
+    def simulate_lurker_mode(self) -> bool:
+        """Simule un mode observateur où le bot lit sans répondre"""
+        now = self._get_current_time()
+        
+        # Vérifier si déjà en mode lurk
+        if self.is_lurking:
+            if now >= self.lurk_end_time:
+                self.is_lurking = False
+                self.lurk_end_time = None
+            return self.is_lurking
+        
+        # Vérifier seulement toutes les 5 minutes pour éviter les calculs constants
+        if (self.last_lurk_check and 
+            now - self.last_lurk_check < datetime.timedelta(minutes=5)):
+            return False
+            
+        self.last_lurk_check = now
+        
+        # Probabilité de commencer un mode lurk selon l'activité
+        activity_level = self.get_activity_level()
+        
+        # Plus on est actif, moins on a de chance de lurker (comportement réaliste)
+        lurk_probability = 0.08 - (activity_level * 0.03)  # 5-8% de base selon activité
+        
+        # Moins de lurk pendant les heures de pointe
+        if self._is_peak_hours():
+            lurk_probability *= 0.5
+        
+        # Plus de lurk le weekend (plus relax)
+        if self._is_weekend():
+            lurk_probability *= 1.5
+            
+        if random.random() < lurk_probability:
+            # Durée du mode lurk (en minutes)
+            lurk_duration_minutes = random.randint(10, 45)  # 10-45 minutes
+            
+            self.is_lurking = True
+            self.lurk_end_time = now + datetime.timedelta(minutes=lurk_duration_minutes)
+            return True
+            
+        return False
     
     def get_spontaneous_status(self) -> Optional[str]:
         """Génère un status update spontané selon l'activité et l'heure"""

@@ -149,6 +149,16 @@ class HumanResponseGenerator:
                                       final_response, is_private, is_bot=True)
                 return final_response
         
+        # Réaction contextuelle rapide (priorité haute)
+        contextual_reaction = self._get_contextual_reaction(message)
+        if contextual_reaction:
+            final_reaction = self.personality.adapt_response_style(contextual_reaction)
+            final_reaction = self.personality.adapt_response_with_mood(final_reaction)
+            final_reaction = self._add_human_touches(final_reaction)
+            self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
+                                  final_reaction, is_private, is_bot=True)
+            return final_reaction
+        
         # Traitement spécial des messages privés
         if is_private:
             private_response = self._handle_private_message(message, sender)
@@ -297,17 +307,25 @@ Tu participes à une {context_type} et réponds naturellement.
         """Ajoute des imperfections humaines au texte"""
         result = text
         
-        # Appliquer des fautes de frappe aléatoires
-        if random.random() < 0.4:  # 40% de chance d'avoir des fautes
+        # Appliquer des fautes de frappe aléatoires (plus fréquent pour naturel)
+        if random.random() < 0.7:  # 70% de chance d'avoir des fautes
             result = self._apply_typos(result)
+        
+        # Appliquer style SMS/IRC agressif (abréviations)
+        if random.random() < 0.6:  # 60% de chance d'abréger
+            result = self._apply_sms_abbreviations(result)
         
         # Parfois oublier une majuscule en début de phrase
         if random.random() < 0.6:
             result = result[0].lower() + result[1:] if len(result) > 1 else result.lower()
         
-        # Parfois oublier la ponctuation finale
-        if random.random() < 0.3 and result.endswith(('.', '!', '?')):
+        # Suppression ponctuation excessive (style IRC naturel)
+        if random.random() < 0.6 and result.endswith(('.', '!', '?')):
             result = result[:-1]
+        
+        # Suppression spécifique points d'interrogation (très courant sur IRC)
+        if random.random() < 0.5:
+            result = result.replace('?', '')
         
         # Ajouter parfois des points de suspension
         if random.random() < 0.2:
@@ -360,6 +378,135 @@ Tu participes à une {context_type} et réponds naturellement.
                 break  # Une seule répétition par message
         
         return text
+    
+    def _get_contextual_reaction(self, message: str) -> Optional[str]:
+        """Génère des réactions contextuelles instinctives basées sur des mots-clés émotionnels"""
+        
+        # Réactions négatives/frustrantes
+        negative_keywords = {
+            'merde': ['oh merde', 'ah merde alors', 'raaah merde'],
+            'chiant': ['ouais c\'est chiant ça', 'raaaah chiant', 'grave chiant'],  
+            'relou': ['trop relou', 'grave relou ça', 'ouais relou'],
+            'nul': ['c\'est nul ça', 'vraiment nul', 'ouais nul'],
+            'pourri': ['c\'est pourri', 'grave pourri', 'ouais pourri'],
+            'bug': ['oh non pas encore', 'raaaah les bugs', 'chiant ces bugs'],
+            'crash': ['oh nooon', 'pas encore...', 'raaaah ça crash'],
+            'problème': ['oh merde un problème', 'pas cool ça', 'chiant ces problèmes'],
+            'galère': ['quelle galère', 'ouais c\'est la galère', 'raaah galère'],
+        }
+        
+        # Réactions positives/excitantes  
+        positive_keywords = {
+            'génial': ['trop cool !', 'grave génial ça !', 'ouais c\'est génial !'],
+            'super': ['ah super !', 'trop bien !', 'excellent !'],
+            'cool': ['ah cool !', 'sympa !', 'c\'est cool ça !'],
+            'parfait': ['nickel !', 'parfait alors !', 'top !'],
+            'réussi': ['bravo !', 'bien joué !', 'nickel !'],
+            'marche': ['ça marche !', 'parfait !', 'top !'],
+            'fonctionne': ['génial ça marche !', 'nickel !', 'parfait !'],
+            'gagné': ['ouais !', 'bien joué !', 'excellent !'],
+        }
+        
+        # Réactions de surprise
+        surprise_keywords = {
+            'vraiment': ['ah bon vraiment ?', 'sérieusement ?', 'ah ouais ?'],
+            'incroyable': ['waouh incroyable !', 'dingue !', 'pas possible !'],
+            'impossible': ['vraiment impossible ?', 'nan sérieux ?', 'pas croyable !'],
+            'bizarre': ['ah c\'est bizarre ça', 'chelou', 'zarb ton truc'],
+            'étrange': ['étrange en effet', 'bizarre ça', 'chelou'],
+        }
+        
+        # Réactions d'accord/désaccord
+        agreement_keywords = {
+            'exact': ['exactement !', 'c\'est clair !', 'tout à fait !'],
+            'vrai': ['c\'est vrai ça !', 'ah ouais c\'est vrai !', 'exactement !'],
+            'juste': ['c\'est juste !', 'tout à fait !', 'exactement !'],
+            'faux': ['nan c\'est faux', 'pas d\'accord', 'je crois pas'],
+            'tort': ['ouais tu as tort', 'nan c\'est pas ça', 'faux'],
+        }
+        
+        message_lower = message.lower()
+        
+        # Vérifier les mots-clés négatifs
+        for keyword, reactions in negative_keywords.items():
+            if keyword in message_lower:
+                if random.random() < 0.4:  # 40% de chance de réagir
+                    return random.choice(reactions)
+        
+        # Vérifier les mots-clés positifs  
+        for keyword, reactions in positive_keywords.items():
+            if keyword in message_lower:
+                if random.random() < 0.35:  # 35% de chance de réagir
+                    return random.choice(reactions)
+        
+        # Vérifier les mots-clés de surprise
+        for keyword, reactions in surprise_keywords.items():
+            if keyword in message_lower:
+                if random.random() < 0.3:  # 30% de chance de réagir
+                    return random.choice(reactions)
+        
+        # Vérifier les mots-clés d'accord/désaccord
+        for keyword, reactions in agreement_keywords.items():
+            if keyword in message_lower:
+                if random.random() < 0.25:  # 25% de chance de réagir
+                    return random.choice(reactions)
+        
+        return None
+    
+    def calculate_typing_delay(self, message: str) -> float:
+        """Calcule un délai de frappe réaliste basé sur la longueur du message"""
+        if not message:
+            return 0.5
+            
+        # Vitesse de frappe simulée (caractères par seconde)
+        # Utilisateurs moyens : 3-5 caractères/seconde
+        # Plus lent sur mobile, plus rapide si habitué au clavier
+        base_typing_speed = random.uniform(3.0, 5.5)  # chars/sec
+        
+        # Facteur selon la personnalité
+        if hasattr(self, 'personality') and self.personality:
+            # Les geeks tapent plus vite
+            geek_modifier = 1 + (self.personality.profile.geek_level * 0.3)  # +30% max
+            
+            # Les jeunes tapent plus vite  
+            age_modifier = 1.0
+            if self.personality.profile.age < 25:
+                age_modifier = 1.2  # +20% plus rapide
+            elif self.personality.profile.age > 35:
+                age_modifier = 0.9  # -10% plus lent
+                
+            # L'humeur affecte la vitesse
+            mood = self.personality.profile.current_mood
+            mood_modifier = 1.0
+            if mood == "excited":
+                mood_modifier = 1.3  # Tape vite quand excité
+            elif mood == "tired":
+                mood_modifier = 0.7  # Tape lent quand fatigué
+            elif mood == "bad":
+                mood_modifier = 0.8  # Un peu plus lent si mauvaise humeur
+                
+            base_typing_speed *= geek_modifier * age_modifier * mood_modifier
+        
+        # Calcul du délai de base
+        char_count = len(message)
+        base_delay = char_count / base_typing_speed
+        
+        # Ajouter des pauses de réflexion pour les messages longs
+        if char_count > 50:
+            thinking_pause = random.uniform(1.0, 3.0)
+            base_delay += thinking_pause
+        elif char_count > 20:
+            thinking_pause = random.uniform(0.5, 1.5)  
+            base_delay += thinking_pause
+        
+        # Variation aléatoire (+/-30%)
+        variation = random.uniform(0.7, 1.3)
+        final_delay = base_delay * variation
+        
+        # Délai minimum et maximum raisonnables
+        final_delay = max(1.0, min(final_delay, 15.0))
+        
+        return final_delay
     
     def _get_mention_response(self, message: str, sender: str) -> Optional[str]:
         """Génère une réponse spéciale quand le bot est mentionné"""
@@ -712,3 +859,118 @@ Tu participes à une {context_type} et réponds naturellement.
             return random.choice(personal_responses)
             
         return None  # Laisser l'IA ou les réponses normales prendre le relais
+    
+    def _apply_sms_abbreviations(self, text: str) -> str:
+        """Applique des abréviations SMS/IRC typiques pour un style plus naturel"""
+        
+        # Abréviations courantes IRC/SMS (très utilisées)
+        common_abbreviations = {
+            # Mots interrogatifs
+            'quoi': ['koi', 'kwa'],
+            'pourquoi': ['pk', 'pkoi'], 
+            'comment': ['cmt', 'cmnt'],
+            'combien': ['cmb'],
+            'quand': ['kan'],
+            'que': ['ke'],
+            'qu\'est-ce que': ['kske'],
+            
+            # Pronoms et articles
+            'tu': ['t', 'tu'],
+            'vous': ['vs', 'vou'],  
+            'de': ['d', 'de'],
+            'du': ['du', 'd'],
+            'des': ['d'],
+            'le': ['l'],
+            'la': ['l'],
+            'les': ['l'],
+            
+            # Mots courants
+            'je suis': ['chui', 'jsui', 'jsu'],
+            'c\'est': ['c', 'c\'est'],
+            'il y a': ['ya', 'ila'], 
+            'aussi': ['oci', 'aussi'],
+            'avec': ['av', 'avc'],
+            'sans': ['ss'],
+            'dans': ['ds'],
+            'sur': ['sr'],
+            'pour': ['pr', 'pou'],
+            'par': ['pr'],
+            'mais': ['m'],
+            'très': ['tre', 'tr'],
+            'plus': ['pl', '+'],
+            'bien': ['bn'],
+            'tout': ['tt', 'tou'],
+            'tous': ['ts'],
+            'quelque chose': ['kelkcho', 'qqch'],
+            'quelqu\'un': ['kelkun', 'qqun'],
+            'beaucoup': ['bcp', 'bocou'],
+            'maintenant': ['mnt', 'maintn'],
+            'aujourd\'hui': ['auj', 'ajd'],
+            'demain': ['2m1', 'dem1'],
+            'hier': ['ir'],
+            'peut-être': ['ptet', 'ptetre'],
+            'sûrement': ['surmt'],
+            'vraiment': ['vrmt', 'vrmnt'],
+            'tranquille': ['trkl', 'trankil'],
+            'salut': ['slt', 'salu'],
+            'bonjour': ['bjr', 'salut'],
+            'bonsoir': ['bsr'],
+            'merci': ['mci', 'mercy'],
+            'de rien': ['drien', '2rien'],
+            
+            # Expressions IRC
+            'rigole': ['mdr', 'lol'],
+            'mort de rire': ['mdr', 'ptdr'],
+            'j\'ai': ['j\'ai', 'jai'],
+            'n\'importe quoi': ['nimpkoi'],
+            'ça va': ['sava', 'sa va'],
+            'ça marche': ['sa march'],
+            'ça roule': ['sa rul'],
+            'pas de problème': ['paspb', 'pp'],
+            'no problemo': ['nopb'],
+            'à plus tard': ['a+', 'aplus'],
+            'à bientôt': ['abiento', 'a biento'],
+            'tant mieux': ['tanmieu'],
+            'tant pis': ['tanpi'],
+        }
+        
+        result = text.lower()
+        
+        # Appliquer 2-3 abréviations maximum par message pour rester naturel
+        abbreviations_applied = 0
+        max_abbreviations = random.randint(2, 4)
+        
+        # Parcourir les abréviations dans un ordre aléatoire
+        items = list(common_abbreviations.items())
+        random.shuffle(items)
+        
+        for original, replacements in items:
+            if abbreviations_applied >= max_abbreviations:
+                break
+                
+            if original in result:
+                # Choisir une abréviation aléatoire
+                replacement = random.choice(replacements)
+                # Appliquer seulement 50% du temps même si le mot est présent
+                if random.random() < 0.5:
+                    result = result.replace(original, replacement, 1)  # Une seule occurrence
+                    abbreviations_applied += 1
+        
+        # Suppression voyelles aléatoire (style SMS extrême) - rare
+        if random.random() < 0.2:  # 20% de chance
+            words = result.split()
+            if len(words) > 1:  # Au moins 2 mots
+                word_to_shorten = random.choice(words)
+                if len(word_to_shorten) > 4:  # Mots assez longs
+                    # Supprimer quelques voyelles (pas toutes)
+                    vowels = 'aeiou'
+                    shortened = ''
+                    vowel_removed = False
+                    for char in word_to_shorten:
+                        if char in vowels and not vowel_removed and random.random() < 0.3:
+                            vowel_removed = True
+                            continue  # Supprimer cette voyelle
+                        shortened += char
+                    result = result.replace(word_to_shorten, shortened, 1)
+        
+        return result

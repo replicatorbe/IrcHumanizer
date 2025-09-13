@@ -236,17 +236,22 @@ class IrcHumanizerBot:
         if not self.activity_manager.should_respond(base_probability):
             return
         
-        # Attendre un délai adaptatif selon l'heure et l'activité
-        delay = self.activity_manager.get_adaptive_delay(
-            self.config.min_response_delay,
-            self.config.max_response_delay
-        )
-        await asyncio.sleep(delay)
-        
-        # Générer une réponse humaine (avec contexte mention si applicable)
+        # Générer une réponse humaine d'abord (avec contexte mention si applicable)
         response = await self.human_generator.generate_response(message, sender, target, is_mentioned)
         
         if response:
+            # Calculer le délai de frappe réaliste basé sur la longueur de la réponse
+            typing_delay = self.human_generator.calculate_typing_delay(response)
+            
+            # Combiner avec le délai d'activité (mais donner la priorité à la simulation de frappe)
+            activity_delay = self.activity_manager.get_adaptive_delay(
+                self.config.min_response_delay,
+                self.config.max_response_delay
+            )
+            
+            # Prendre le délai le plus réaliste (généralement le typing_delay)
+            final_delay = max(typing_delay, activity_delay * 0.3)  # Réduire l'impact de l'activity delay
+            await asyncio.sleep(final_delay)
             await self.send_message(target, response)
             self.activity_manager.record_response()  # Enregistrer pour anti-détection
             self.logger.info(f"[{target}] <{self.config.nickname}> {response}")
