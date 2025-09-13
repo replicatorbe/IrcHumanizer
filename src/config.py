@@ -1,7 +1,7 @@
 import yaml
 import os
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 
 @dataclass
@@ -25,6 +25,9 @@ class Config:
     # API IA (pour future intégration)
     ai_api_key: str
     ai_model: str
+    
+    # Configuration personnalité (optionnelle)
+    personality_config: Optional[Dict[str, Any]]
     
     @classmethod
     def load_from_file(cls, config_path: str) -> 'Config':
@@ -52,7 +55,8 @@ class Config:
             min_response_delay=data['behavior'].get('min_response_delay', 1.0),
             max_response_delay=data['behavior'].get('max_response_delay', 5.0),
             ai_api_key=data['ai'].get('api_key', ''),
-            ai_model=data['ai'].get('model', 'gpt-3.5-turbo')
+            ai_model=data['ai'].get('model', 'gpt-3.5-turbo'),
+            personality_config=data.get('personality')
         )
     
     @staticmethod

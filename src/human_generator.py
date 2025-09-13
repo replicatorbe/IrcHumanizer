@@ -4,6 +4,7 @@ import openai
 import logging
 from typing import Optional, List
 from .memory_manager import ConversationMemory
+from .personality import PersonalityManager
 
 class HumanResponseGenerator:
     """Générateur de réponses humaines avec fautes et imperfections"""
@@ -14,6 +15,11 @@ class HumanResponseGenerator:
         
         # Initialiser la mémoire conversationnelle
         self.memory = ConversationMemory()
+        
+        # Initialiser la personnalité
+        personality_config = config.personality_config if config else None
+        self.personality = PersonalityManager(config_data=personality_config)
+        self.logger.info(f"Personnalité générée: {self.personality.profile.name}, {self.personality.profile.age} ans, {self.personality.profile.location['city']}")
         
         # Initialiser OpenAI si une clé API est fournie
         if config and config.ai_api_key:
@@ -120,13 +126,33 @@ class HumanResponseGenerator:
         # Ajouter le message à la mémoire
         self.memory.add_message(target, sender, message, is_private)
         
+        # Vérifier les questions de géolocalisation (priorité haute)
+        location_response = self.personality.should_respond_to_location_question(message)
+        if location_response:
+            # Adapter selon la personnalité et ajouter à la mémoire
+            final_response = self.personality.adapt_response_style(location_response)
+            final_response = self._add_human_touches(final_response)
+            self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
+                                  final_response, is_private, is_bot=True)
+            return final_response
+        
+        # Vérifier les questions d'âge
+        age_response = self.personality.get_age_appropriate_response(message)
+        if age_response:
+            final_response = self.personality.adapt_response_style(age_response)
+            final_response = self._add_human_touches(final_response)
+            self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
+                                  final_response, is_private, is_bot=True)
+            return final_response
+        
         # Utiliser l'IA si disponible, sinon les réponses prédéfinies
         if self.use_ai:
             try:
                 ai_response = await self._get_ai_response(message, sender, target, is_private)
                 if ai_response:
-                    # Ajouter notre réponse à la mémoire aussi
-                    human_response = self._add_human_touches(ai_response)
+                    # Adapter selon la personnalité et ajouter à la mémoire
+                    human_response = self.personality.adapt_response_style(ai_response)
+                    human_response = self._add_human_touches(human_response)
                     self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                           human_response, is_private, is_bot=True)
                     return human_response
@@ -138,10 +164,15 @@ class HumanResponseGenerator:
         # Détection de salutations
         greetings_keywords = ['salut', 'hello', 'bonjour', 'bonsoir', 'coucou', 'hi', 'hey']
         if any(greeting in message_lower for greeting in greetings_keywords):
-            response = random.choice(self.greetings)
+            response = random.choice(self.personality.profile.greetings)
             if sender:
                 response += f" {sender}"
-            return self._add_human_touches(response)
+            # Appliquer personnalité + touches humaines
+            response = self.personality.adapt_response_style(response)
+            response = self._add_human_touches(response)
+            self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
+                                  response, is_private, is_bot=True)
+            return response
         
         # Détection de questions
         if '?' in message or any(word in message_lower for word in ['comment', 'pourquoi', 'quand', 'où', 'qui', 'quoi']):
@@ -149,8 +180,13 @@ class HumanResponseGenerator:
         else:
             base_response = random.choice(self.casual_responses)
         
-        # Ajouter des touches humaines
-        response = self._add_human_touches(base_response)
+        # Appliquer personnalité + touches humaines
+        response = self.personality.adapt_response_style(base_response)
+        response = self._add_human_touches(response)
+        
+        # Ajouter à la mémoire
+        self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
+                              response, is_private, is_bot=True)
         
         return response
     
@@ -163,17 +199,22 @@ class HumanResponseGenerator:
             # Analyser la personnalité de l'utilisateur
             user_personality = self.memory.get_user_personality(sender)
             
-            # Construire le prompt avec contexte
+            # Construire le prompt avec contexte et personnalité
             context_type = "conversation privée" if is_private else f"salon {target}"
+            personality_context = self.personality.get_personality_context()
             
-            system_prompt = f"""Tu es un utilisateur IRC décontracté qui écrit en français familier.
-            Tu participes à une {context_type}. 
-            Réponds naturellement comme dans une conversation informelle sur IRC.
-            Utilise un langage simple, familier, avec parfois du langage SMS.
-            Reste bref (max 1-2 phrases). Sois humain et spontané.
-            Ne sois pas trop poli ou formel. Utilise parfois des abréviations comme 'jsp', 'mdr', 'ptdr', etc.
-            
-            IMPORTANT: Tiens compte de l'historique de la conversation pour répondre de manière cohérente."""
+            system_prompt = f"""Tu es un utilisateur IRC réel. Voici ta personnalité:
+
+{personality_context}
+
+Tu participes à une {context_type} et réponds naturellement.
+- Utilise un langage simple, familier, avec parfois du langage SMS
+- Reste bref (max 1-2 phrases) 
+- Sois humain et spontané selon ta personnalité
+- Ne sois pas trop poli ou formel
+- Tiens compte de l'historique pour répondre de manière cohérente
+- Si on te demande ton âge, ta ville, tes goûts, réponds selon ta personnalité
+- Adapte ton niveau de langage selon ton score de décontraction"""
             
             # Construire les messages avec historique
             messages = [{"role": "system", "content": system_prompt}]

@@ -31,3 +31,26 @@ ai:
   
   # Modèle à utiliser
   model: "gpt-3.5-turbo"
+
+# Personnalité du bot (optionnel - si vide, génération aléatoire)
+personality:
+  # Identité (laisser vide pour génération aléatoire)
+  name: ""           # Ex: "Alex", "Marie"  
+  gender: ""         # "M", "F", ou "NB"
+  age: 0             # 16-45, 0 = aléatoire
+  
+  # Localisation (laisser vide pour aléatoire français)
+  city: ""           # Ex: "Lyon", "Paris"
+  region: ""         # Ex: "69", "75" (code département)
+  
+  # Traits (0.0 à 1.0, vide = aléatoire)
+  humor_level: 0     # Niveau d'humour
+  casualness: 0      # Décontraction  
+  friendliness: 0    # Amabilité
+  geek_level: 0      # Côté geek
+  
+  # Styles d'écriture préférés (liste)
+  writing_styles: []  # ["sms", "argot", "correct", "old_school"]
+  
+  # Centres d'intérêt personnalisés (liste)
+  interests: []       # ["jeux vidéo", "musique", "sport", ...]
