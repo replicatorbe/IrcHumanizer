@@ -25,8 +25,8 @@ behavior:
   response_probability: 0.3
   
   # Délai avant réponse en secondes (pour simuler le temps de réflexion/frappe)
-  min_response_delay: 1.0
-  max_response_delay: 5.0
+  min_response_delay: 2.0
+  max_response_delay: 12.0
 
 ai:
   # Clé API pour le service d'IA (utilise une variable d'environnement)

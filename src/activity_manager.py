@@ -243,6 +243,169 @@ class ActivityManager:
         
         return random.choice(return_messages)
     
+    def get_spontaneous_status(self) -> Optional[str]:
+        """Génère un status update spontané selon l'activité et l'heure"""
+        # Très faible probabilité (0.5%) pour éviter le spam
+        if random.random() > 0.005:
+            return None
+            
+        # Pas de status si en absence
+        if self.is_simulating_absence:
+            return None
+            
+        # Pas de status hors heures d'activité
+        if not self.is_active_hours():
+            return None
+            
+        now = self._get_current_time()
+        
+        # Status selon l'heure
+        time_based_status = []
+        
+        if 6 <= now.hour <= 9:
+            time_based_status = [
+                "Café ☕",
+                "Petit déj au lit",
+                "Difficile de se lever ce matin...",
+                "Allez hop, nouvelle journée !",
+                "Réveil en douceur",
+                "Première gorgée de café 😋",
+                "Debout les morts !",
+                "Matinée tranquille"
+            ]
+        elif 12 <= now.hour <= 14:
+            time_based_status = [
+                "Pause déjeuner bien méritée",
+                "Je mange un truc",
+                "Sandwich time !",
+                "Petite faim...",
+                "Qu'est-ce qu'on bouffe ?",
+                "J'ai la dalle",
+                "Pause resto",
+                "Nom nom nom 🍽️"
+            ]
+        elif 15 <= now.hour <= 16:
+            time_based_status = [
+                "Petit coup de mou de l'après-midi",
+                "Pause café nécessaire",
+                "Ça traîne un peu...",
+                "Vivement 18h",
+                "Sieste interdite ?",
+                "L'après-midi c'est long",
+                "Encore du café ☕"
+            ]
+        elif 17 <= now.hour <= 19:
+            time_based_status = [
+                "Enfin la fin de journée !",
+                "Libéré delivré 🎉",
+                "Weekend approche...",
+                "Apéro time ?",
+                "On se détend",
+                "Fin du taff !",
+                "Soirée mode ON"
+            ]
+        elif 20 <= now.hour <= 23:
+            time_based_status = [
+                "Soirée peinard devant Netflix",
+                "Mode détente activé",
+                "Une petite série ?",
+                "Journée finie, on se pose",
+                "Canapé je t'aime ❤️",
+                "Qui dit soirée film ?",
+                "Flemme totale ce soir",
+                "Mode chaussons 🥿"
+            ]
+        
+        # Status selon le jour de la semaine
+        weekday_status = []
+        
+        if now.weekday() == 0:  # Lundi
+            weekday_status = [
+                "Lundi... courage",
+                "Allez on y va pour cette semaine",
+                "Lundi blues 😴",
+                "Nouvelle semaine, nouveau départ",
+                "Lundi, mon ami... pas",
+                "Week-end déjà fini sniif"
+            ]
+        elif now.weekday() == 4:  # Vendredi  
+            weekday_status = [
+                "Vendredi enfin ! 🎉",
+                "TGIF comme ils disent",
+                "Weekend loading...",
+                "Vendredi = motivation +1000",
+                "Presque le weekend !",
+                "Friday feeling 💪"
+            ]
+        elif now.weekday() in [5, 6]:  # Weekend
+            weekday_status = [
+                "Weekend mode activated 🌟",
+                "Grasse matinée bien méritée",
+                "Pas d'alarme = bonheur",
+                "Weekend vibes ✨",
+                "Liberté totale !",
+                "Rien à faire, c'est parfait",
+                "Weekend = recharge batteries"
+            ]
+        
+        # Status selon l'humeur simulée
+        mood_status = []
+        current_hour = now.hour
+        
+        if current_hour < 10:
+            # Matin: plutôt bonne humeur
+            mood_status = [
+                "Bien réveillé aujourd'hui !",
+                "Ça va être une bonne journée",
+                "Motivé ce matin 💪",
+                "Forme olympique !",
+                "Ready pour la journée",
+                "Good vibes today ✨"
+            ]
+        elif 14 <= current_hour <= 16:
+            # Après-midi: plus mou
+            mood_status = [
+                "Petit coup de barre...",
+                "L'après-midi ça traîne",
+                "Besoin de sucre",
+                "Motivation en baisse",
+                "Ça va mieux dans une heure",
+                "Pause s'il vous plaît"
+            ]
+        
+        # Status activités
+        activity_status = [
+            "Pause clope ☢️",
+            "Je regarde par la fenêtre",
+            "Musique dans les oreilles 🎵",
+            "Je scrolle Instagram",
+            "Petit tour sur YouTube",
+            "Messages en retard à lire",
+            "Je range mon bureau... ou pas",
+            "Procrastination level: expert",
+            "Je fais semblant de bosser",
+            "Pause étirements",
+            "Bâillement incoming 🥱",
+            "Concentration: 15%"
+        ]
+        
+        # Rassembler tous les status possibles
+        all_status = activity_status[:]
+        
+        # Ajouter status temporels (60% de chance)
+        if time_based_status and random.random() < 0.6:
+            all_status.extend(time_based_status)
+            
+        # Ajouter status du jour (30% de chance)
+        if weekday_status and random.random() < 0.3:
+            all_status.extend(weekday_status)
+            
+        # Ajouter status d'humeur (40% de chance)
+        if mood_status and random.random() < 0.4:
+            all_status.extend(mood_status)
+        
+        return random.choice(all_status) if all_status else None
+    
     def get_adaptive_delay(self, base_min: float, base_max: float) -> float:
         """Calcule un délai adaptatif basé sur l'heure et l'activité"""
         activity_level = self.get_activity_level()
@@ -266,6 +429,10 @@ class ActivityManager:
         
         adjusted_min = base_min * modifier
         adjusted_max = base_max * modifier
+        
+        # Parfois beaucoup plus long (5% de chance) - humain distrait/interrompu
+        if random.random() < 0.05:
+            adjusted_max *= random.uniform(2.0, 3.5)  # Peut aller jusqu'à ~40s dans le pire cas
         
         return random.uniform(adjusted_min, adjusted_max)
     

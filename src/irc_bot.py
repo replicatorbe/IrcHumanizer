@@ -178,15 +178,59 @@ class IrcHumanizerBot:
         # Vérifier si le bot fait une action spontanée
         action = self.human_generator.personality.get_irc_action()
         if action:
-            action_delay = random.uniform(0.5, 2.0)
+            action_delay = random.uniform(1.0, 6.0)
             await asyncio.sleep(action_delay)
             await self.send_action(target, action)
             self.logger.info(f"[{target}] * {self.config.nickname} {action}")
             return  # Action au lieu de réponse
         
+        # Vérifier si le bot pose une question spontanée (très rare, channels seulement)
+        if target.startswith('#'):
+            spontaneous_question = self.human_generator.get_spontaneous_question(target)
+            if spontaneous_question:
+                # Délai plus long pour les questions spontanées (paraître naturel)
+                question_delay = random.uniform(5.0, 18.0)
+                await asyncio.sleep(question_delay)
+                
+                # Adapter la question selon la personnalité
+                adapted_question = self.human_generator.personality.adapt_response_style(spontaneous_question)
+                adapted_question = self.human_generator.personality.adapt_response_with_mood(adapted_question)
+                adapted_question = self.human_generator._add_human_touches(adapted_question)
+                
+                await self.send_message(target, adapted_question)
+                self.activity_manager.record_response()  # Compter comme une réponse
+                self.logger.info(f"[{target}] <{self.config.nickname}> [QUESTION] {adapted_question}")
+                return  # Question au lieu de réponse normale
+        
+        # Vérifier si le bot poste un status spontané (très rare, channels seulement)
+        if target.startswith('#'):
+            spontaneous_status = self.activity_manager.get_spontaneous_status()
+            if spontaneous_status:
+                # Délai moyen pour les status (paraître naturel)
+                status_delay = random.uniform(3.0, 12.0)
+                await asyncio.sleep(status_delay)
+                
+                # Adapter le status selon la personnalité
+                adapted_status = self.human_generator.personality.adapt_response_style(spontaneous_status)
+                adapted_status = self.human_generator.personality.adapt_response_with_mood(adapted_status) 
+                adapted_status = self.human_generator._add_human_touches(adapted_status)
+                
+                await self.send_message(target, adapted_status)
+                self.activity_manager.record_response()  # Compter comme une réponse
+                self.logger.info(f"[{target}] <{self.config.nickname}> [STATUS] {adapted_status}")
+                return  # Status au lieu de réponse normale
+        
+        # Vérifier si le bot est mentionné (réaction prioritaire)
+        is_mentioned = self._is_bot_mentioned(message)
+        
         # Décider si on doit répondre (probabilité modifiée par humeur + activité)
         mood_modifier = self.human_generator.personality.get_mood_modifier()
         base_probability = self.config.response_probability * mood_modifier
+        
+        # Si mentionné, probabilité beaucoup plus élevée (80%)
+        if is_mentioned:
+            base_probability = 0.8 * mood_modifier
+        
         activity_level = self.activity_manager.get_activity_level()
         
         if not self.activity_manager.should_respond(base_probability):
@@ -199,13 +243,44 @@ class IrcHumanizerBot:
         )
         await asyncio.sleep(delay)
         
-        # Générer une réponse humaine
-        response = await self.human_generator.generate_response(message, sender, target)
+        # Générer une réponse humaine (avec contexte mention si applicable)
+        response = await self.human_generator.generate_response(message, sender, target, is_mentioned)
         
         if response:
             await self.send_message(target, response)
             self.activity_manager.record_response()  # Enregistrer pour anti-détection
             self.logger.info(f"[{target}] <{self.config.nickname}> {response}")
+    
+    def _is_bot_mentioned(self, message: str) -> bool:
+        """Vérifie si le bot est mentionné dans le message"""
+        if not hasattr(self.config, 'nickname') or not self.config.nickname:
+            return False
+            
+        message_lower = message.lower()
+        nickname_lower = self.config.nickname.lower()
+        
+        # Détection de mentions directes
+        mentions = [
+            nickname_lower,                    # "Pierre"
+            f"{nickname_lower}:",             # "Pierre:"  
+            f"{nickname_lower},",             # "Pierre,"
+            f"@{nickname_lower}",             # "@Pierre"
+            f"{nickname_lower}?",             # "Pierre?"
+            f"{nickname_lower}!",             # "Pierre!"
+        ]
+        
+        # Vérifier si une mention est présente
+        for mention in mentions:
+            if mention in message_lower:
+                return True
+                
+        # Détection contextuelle (salutations + nom)
+        greetings = ["salut", "hello", "hi", "hey", "bonjour", "bonsoir"]
+        for greeting in greetings:
+            if greeting in message_lower and nickname_lower in message_lower:
+                return True
+                
+        return False
     
     def _generate_personality_nickname(self) -> str:
         """Génère un nickname IRC basé sur la personnalité du bot"""
