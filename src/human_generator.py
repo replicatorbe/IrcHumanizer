@@ -308,7 +308,7 @@ Tu participes à une {context_type} et réponds naturellement.
         result = text
         
         # Appliquer des fautes de frappe aléatoires (plus fréquent pour naturel)
-        if random.random() < 0.7:  # 70% de chance d'avoir des fautes
+        if random.random() < 0.4:  # 40% de chance d'avoir des fautes
             result = self._apply_typos(result)
         
         # Appliquer style SMS/IRC agressif (abréviations)
@@ -331,13 +331,20 @@ Tu participes à une {context_type} et réponds naturellement.
         if random.random() < 0.2:
             result += "..."
         
+        # Parfois simuler une auto-correction
+        if random.random() < 0.05:
+            corrections = [
+                "*correction", "*enfin", "*je veux dire", "*pardon"
+            ]
+            result += " " + random.choice(corrections)
+        
         # Ajouter parfois des répétitions de lettres
         if random.random() < 0.15:
             result = self._add_letter_repetitions(result)
         
-        # Parfois ajouter des hésitations
-        if random.random() < 0.1:
-            hesitations = ['euh', 'hmm', 'bah', 'ben']
+        # Parfois ajouter des hésitations et pensées
+        if random.random() < 0.15:
+            hesitations = ['euh', 'hmm', 'bah', 'ben', 'alors...', 'voyons...', 'attends...', 'heuuu']
             hesitation = random.choice(hesitations)
             if random.random() < 0.5:
                 result = hesitation + " " + result
@@ -453,6 +460,26 @@ Tu participes à une {context_type} et réponds naturellement.
         
         return None
     
+    def calculate_reading_delay(self, incoming_message: str) -> float:
+        """Calcule un délai de lecture réaliste du message reçu"""
+        if not incoming_message:
+            return 0.1
+            
+        # Vitesse de lecture (mots par seconde)
+        reading_speed = random.uniform(3.0, 6.0)  # 3-6 mots/sec
+        word_count = len(incoming_message.split())
+        
+        # Délai minimum pour "traiter" le message
+        base_reading_time = word_count / reading_speed
+        
+        # Ajouter temps de "réflexion"
+        thinking_time = random.uniform(0.3, 1.5)
+        
+        # Délai total de lecture + réflexion
+        total_delay = base_reading_time + thinking_time
+        
+        return max(0.5, min(total_delay, 4.0))  # Entre 0.5 et 4 secondes
+
     def calculate_typing_delay(self, message: str) -> float:
         """Calcule un délai de frappe réaliste basé sur la longueur du message"""
         if not message:
@@ -569,6 +596,25 @@ Tu participes à une {context_type} et réponds naturellement.
         
         return response
     
+    def get_spontaneous_interruption(self) -> Optional[str]:
+        """Génère des interruptions/distractions spontanées"""
+        if random.random() > 0.008:  # 0.8% de chance
+            return None
+            
+        interruptions = [
+            "ah merde mon tel sonne",
+            "attends on sonne à la porte",
+            "oh putain j'ai oublié un truc",
+            "merde j'ai failli oublier",
+            "ah zut j'ai un rdv dans 5min", 
+            "oups notification importante",
+            "ah tiens message de ma mère",
+            "merde je dois partir bientôt",
+            "ah c'est l'heure de manger"
+        ]
+        
+        return random.choice(interruptions)
+
     def get_spontaneous_question(self, target: str) -> Optional[str]:
         """Génère une question spontanée pour relancer la conversation"""
         # Ne pas faire de questions en privé, seulement dans les channels

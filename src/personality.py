@@ -131,11 +131,11 @@ class PersonalityManager:
         # Extraction des valeurs de config avec fallbacks
         gender = config_data.get('gender', '').upper()
         if gender not in ['M', 'F']:
-            gender = random.choice(['M', 'F'])  # 50/50 homme/femme seulement
+            gender = random.choices(['M', 'F'], weights=[20, 80])[0]  # 80% féminin, 20% masculin
         
         age = config_data.get('age', 0)
         if age <= 0:
-            age = random.randint(16, 45)
+            age = random.randint(18, 45)
         
         # Gestion de la localisation
         config_city = config_data.get('city', '').strip()
@@ -242,7 +242,7 @@ class PersonalityManager:
             {"city": "Le Havre", "region": "76", "country": "France"}
         ]
         
-        gender = random.choice(["M", "F"])
+        gender = random.choices(["M", "F"], weights=[20, 80])[0]  # 80% féminin, 20% masculin
         
         # Noms selon le genre
         if gender == "M":
@@ -260,7 +260,7 @@ class PersonalityManager:
         return PersonalityProfile(
             name=random.choice(names),
             gender=gender,
-            age=random.randint(16, 45),
+            age=random.randint(18, 45),
             location=random.choice(french_locations),
             
             humor_level=random.uniform(0.3, 0.9),

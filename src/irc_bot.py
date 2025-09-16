@@ -184,6 +184,17 @@ class IrcHumanizerBot:
             self.logger.info(f"[{target}] * {self.config.nickname} {action}")
             return  # Action au lieu de réponse
         
+        # Vérifier si le bot fait une interruption spontanée
+        interruption = self.human_generator.get_spontaneous_interruption()
+        if interruption:
+            interruption_delay = random.uniform(2.0, 8.0)
+            await asyncio.sleep(interruption_delay)
+            adapted_interruption = self.human_generator.personality.adapt_response_style(interruption)
+            adapted_interruption = self.human_generator._add_human_touches(adapted_interruption)
+            await self.send_message(target, adapted_interruption)
+            self.logger.info(f"[{target}] <{self.config.nickname}> [INTERRUPTION] {adapted_interruption}")
+            return
+
         # Vérifier si le bot pose une question spontanée (très rare, channels seulement)
         if target.startswith('#'):
             spontaneous_question = self.human_generator.get_spontaneous_question(target)
@@ -240,6 +251,9 @@ class IrcHumanizerBot:
         response = await self.human_generator.generate_response(message, sender, target, is_mentioned)
         
         if response:
+            # Calculer le délai de lecture du message reçu
+            reading_delay = self.human_generator.calculate_reading_delay(message)
+            
             # Calculer le délai de frappe réaliste basé sur la longueur de la réponse
             typing_delay = self.human_generator.calculate_typing_delay(response)
             
@@ -249,8 +263,8 @@ class IrcHumanizerBot:
                 self.config.max_response_delay
             )
             
-            # Prendre le délai le plus réaliste (généralement le typing_delay)
-            final_delay = max(typing_delay, activity_delay * 0.3)  # Réduire l'impact de l'activity delay
+            # Combiner délai de lecture + frappe + activité
+            final_delay = reading_delay + max(typing_delay, activity_delay * 0.3)
             await asyncio.sleep(final_delay)
             await self.send_message(target, response)
             self.activity_manager.record_response()  # Enregistrer pour anti-détection
