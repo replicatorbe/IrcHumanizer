@@ -77,7 +77,7 @@ class PersonalityManager:
                     "cool": ["stylé", "chanmé", "ouf"],
                     "nul": ["pourri", "naze", "bidon"],
                     "super": ["grave", "de ouf", "mortel"],
-                    "bizarre": ["chelou", "zarb"],
+                    "bizarre": ["chelou", "zarb", "louche"],
                     "cher": ["salé"],
                     "fatigué": ["crevé", "naze"],
                     "énervé": ["vénère", "chaud"],
@@ -95,7 +95,7 @@ class PersonalityManager:
                     "cool": ["chouette", "sympa"],
                     "super": ["génial", "formidable"],
                     "nul": ["pas terrible", "bof bof"],
-                    "bizarre": ["étrange", "curieux"]
+                    "bizarre": ["étrange", "curieux", "chelou"]
                 },
                 "expressions": ["ma foi", "en effet", "tout à fait", "certes"]
             }
@@ -208,10 +208,13 @@ class PersonalityManager:
             
             expressions=[
                 "ah ouais", "c'est clair", "grave", "tout à fait", "exactement",
-                "bah écoute", "en même temps", "du coup", "après bon", "n'empêche que"
+                "bah écoute", "en même temps", "du coup", "après bon", "n'empêche que",
+                "genre", "franchement", "carrément", "oklm", "tranquille", "wesh",
+                "de base", "au final", "en vrai", "nan mais", "jsp", "bref"
             ],
             greetings=[
-                "salut", "coucou", "yo", "hello", "re", "slt", "bonsoir", "bjr"
+                "salut", "coucou", "yo", "hello", "re", "slt", "bonsoir", "bjr",
+                "wesh", "hey", "yop", "plop"
             ]
         )
     
@@ -276,10 +279,13 @@ class PersonalityManager:
             
             expressions=[
                 "ah ouais", "c'est clair", "grave", "tout à fait", "exactement",
-                "bah écoute", "en même temps", "du coup", "après bon", "n'empêche que"
+                "bah écoute", "en même temps", "du coup", "après bon", "n'empêche que",
+                "genre", "franchement", "carrément", "oklm", "tranquille", "wesh",
+                "de base", "au final", "en vrai", "nan mais", "jsp", "bref"
             ],
             greetings=[
-                "salut", "coucou", "yo", "hello", "re", "slt", "bonsoir", "bjr"
+                "salut", "coucou", "yo", "hello", "re", "slt", "bonsoir", "bjr",
+                "wesh", "hey", "yop", "plop"
             ]
         )
     
