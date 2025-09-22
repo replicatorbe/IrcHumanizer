@@ -72,17 +72,13 @@ class ConversationMemory:
             return ""
         
         formatted_lines = []
-        context_type = "conversation privée" if is_private else f"salon {target}"
-        formatted_lines.append(f"[Contexte: {context_type}]")
         
         for msg in history:
             sender = msg["sender"]
             content = msg["message"]
-            timestamp = datetime.fromisoformat(msg["timestamp"])
             
-            # Afficher seulement l'heure pour plus de concision
-            time_str = timestamp.strftime("%H:%M")
-            formatted_lines.append(f"{time_str} <{sender}> {content}")
+            # Format naturel comme vrais messages IRC
+            formatted_lines.append(f"{sender}: {content}")
         
         return "\n".join(formatted_lines)
     
@@ -195,12 +191,12 @@ class ConversationMemory:
         
         # Extraction d'intérêts/hobbies
         interests_keywords = {
-            "gaming": ["jeu", "game", "gaming", "console", "pc", "ps5", "xbox", "steam", "valorant", "lol", "cs"],
-            "music": ["musique", "music", "écoute", "concert", "groupe", "album", "chanson", "spotify"],
-            "movies": ["film", "movie", "cinéma", "netflix", "serie", "série", "regarder"],
+            "gaming": ["jeu", "jeux", "console", "pc", "ps5", "xbox", "steam", "valorant", "lol", "cs"],
+            "music": ["musique", "écoute", "concert", "groupe", "album", "chanson", "spotify"],
+            "movies": ["film", "cinéma", "netflix", "serie", "série", "regarder"],
             "sport": ["sport", "foot", "football", "tennis", "basket", "gym", "course", "vélo"],
             "tech": ["tech", "code", "dev", "programmation", "ordi", "pc", "smartphone"],
-            "travel": ["voyage", "trip", "vacances", "pays", "avion", "hotel"],
+            "travel": ["voyage", "vacances", "pays", "avion", "hotel"],
             "food": ["bouffe", "restaurant", "cuisine", "manger", "plat", "recette"]
         }
         
@@ -244,7 +240,7 @@ class ConversationMemory:
             if "gaming" in interests:
                 greetings.extend([
                     "Salut ! Tu joues à quoi en ce moment ?",
-                    "Hey gamer ! Quoi de neuf ?",
+                    "Hey ! Tu joues à quoi ces temps-ci ?",
                     "Yo ! Des bonnes parties récemment ?"
                 ])
             if "music" in interests:

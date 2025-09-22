@@ -328,7 +328,7 @@ class ActivityManager:
             time_based_status = [
                 "Pause déjeuner bien méritée",
                 "Je mange un truc",
-                "Sandwich time !",
+                "C'est l'heure du sandwich !",
                 "Petite faim...",
                 "Qu'est-ce qu'on bouffe ?",
                 "J'ai la dalle",
@@ -350,7 +350,7 @@ class ActivityManager:
                 "Enfin la fin de journée !",
                 "Libéré delivré 🎉",
                 "Weekend approche...",
-                "Apéro time ?",
+                "C'est l'heure de l'apéro ?",
                 "On se détend",
                 "Fin du taff !",
                 "Soirée mode ON"

@@ -572,11 +572,11 @@ Tu participes à une {context_type} et réponds naturellement.
         
         # Réponses selon le contexte de la mention
         direct_responses = [
-            "Oui ?", "Tu m'as appelé ?", "Qu'est-ce qu'il y a ?",
-            "Je t'écoute", "Salut !", "Oui oui ?", "Dites-moi tout !",
-            "Présent !", "Me voilà !", "Yo !", "Hey !",
-            "Qu'est-ce qui se passe ?", "Tu voulais me parler ?",
-            "Je suis là", "Alors ?", "Quoi de neuf ?"
+            "ouais ?", "tu m'as appelé ?", "qu'est-ce qu'il y a ?",
+            "j'écoute", "salut !", "oui oui ?", "dis-moi tout !",
+            "présent !", "me voilà !", "yo !", "hey !",
+            "qu'est-ce qui se passe ?", "tu voulais me parler ?",
+            "je suis là", "alors ?", "quoi de neuf ?"
         ]
         
         # Réponses selon l'humeur
@@ -584,25 +584,25 @@ Tu participes à une {context_type} et réponds naturellement.
         
         if mood == "good":
             mood_responses = [
-                "Salut ! Ça va bien !", "Hey ! Je suis de bonne humeur !",
-                "Oui ! Tout va bien ici !", "Salut ! Ça roule !",
-                "Hello ! Super journée !", "Yo ! Ça baigne !"
+                "salut ! ça va bien !", "hey ! je suis de bonne humeur !",
+                "ouais ! tout va bien ici !", "salut ! ça roule !",
+                "hello ! super journée !", "yo ! ça baigne !"
             ]
         elif mood == "tired":
             mood_responses = [
-                "Hmm ? Oui ?", "...oui ?", "Je t'écoute",
-                "Qu'est-ce qu'il y a ?", "Mmmh ?", "J'écoute..."
+                "hmm ? ouais ?", "...ouais ?", "j'écoute",
+                "qu'est-ce qu'il y a ?", "mmmh ?", "j'écoute..."
             ]
         elif mood == "bad":
             mood_responses = [
-                "Quoi ?", "Oui bon...", "Qu'est-ce que tu veux ?",
-                "Pas le moment...", "Bof", "Mmm ?"
+                "quoi ?", "ouais bon...", "qu'est-ce que tu veux ?",
+                "pas le moment...", "bof", "mmm ?"
             ]
         elif mood == "excited":
             mood_responses = [
-                "Ouiiii ! Qu'est-ce qu'il y a ?", "Hey ! Alors ?!",
-                "Salut ! Tu voulais quoi ?!", "Yoooo !", 
-                "Dis-moi tout !", "Qu'est-ce qui t'amène ?!"
+                "ouiiii ! qu'est-ce qu'il y a ?", "hey ! alors ?!",
+                "salut ! tu voulais quoi ?!", "yoooo !", 
+                "dis-moi tout !", "qu'est-ce qui t'amène ?!"
             ]
         else:  # neutral
             mood_responses = direct_responses.copy()
@@ -660,19 +660,19 @@ Tu participes à une {context_type} et réponds naturellement.
         
         # Questions générales par catégorie
         general_questions = [
-            "Quelqu'un regarde quoi ce soir ?",
-            "Vous faites quoi ce weekend ?",
-            "Il y a du monde qui dort pas ?",
-            "Alors, quoi de neuf par ici ?",
-            "Une recommandation de film quelqu'un ?",
-            "Vous écoutez quoi comme musique ?",
-            "C'est mort ici non ?",
-            "Personne pour papoter ?",
-            "On fait quoi pour s'occuper ?",
-            "Des nouvelles fraîches ?",
-            "Comment ça se passe votre journée ?",
-            "Y'a quelqu'un d'éveillé ?",
-            "Une série à recommander ?"
+            "quelqu'un regarde quoi ce soir ?",
+            "vous faites quoi ce weekend ?",
+            "y'a du monde qui dort pas ?",
+            "alors, quoi de neuf ?",
+            "une reco de film ?",
+            "vous écoutez quoi en ce moment ?",
+            "c'est mort ici non ?",
+            "personne pour papoter ?",
+            "on fait quoi ?",
+            "des news ?",
+            "ça va votre journée ?",
+            "y'a quelqu'un ?",
+            "une série à voir ?"
         ]
         
         # Questions selon les intérêts de la personnalité
@@ -966,16 +966,12 @@ Tu participes à une {context_type} et réponds naturellement.
             'c\'est': ['c', 'c\'est'],
             'il y a': ['ya', 'y a'], 
             'aussi': ['oci', 'ossi'],
-            'avec': ['av', 'avc'],
-            'sans': ['ss'],
+            'avec': ['avc'],
             'dans': ['ds'],
-            'sur': ['sr'],
             'pour': ['pr', 'pou'],
-            'par': ['pr'],
-            'mais': ['m'],
+            'mais': ['ms'],
             'très': ['tre', 'tr'],
-            'plus': ['pl', '+'],
-            'bien': ['bn'],
+            'plus': ['+'],
             'tout': ['tt', 'tou'],
             'tous': ['ts'],
             'quelque chose': ['kelkcho', 'qqch'],
@@ -1028,13 +1024,13 @@ Tu participes à une {context_type} et réponds naturellement.
             if original in result:
                 # Choisir une abréviation aléatoire
                 replacement = random.choice(replacements)
-                # Appliquer seulement 50% du temps même si le mot est présent
-                if random.random() < 0.5:
+                # Appliquer seulement 30% du temps même si le mot est présent
+                if random.random() < 0.3:
                     result = result.replace(original, replacement, 1)  # Une seule occurrence
                     abbreviations_applied += 1
         
-        # Suppression voyelles aléatoire (style SMS extrême) - rare
-        if random.random() < 0.2:  # 20% de chance
+        # Suppression voyelles aléatoire (style SMS extrême) - très rare
+        if random.random() < 0.1:  # 10% de chance
             words = result.split()
             if len(words) > 1:  # Au moins 2 mots
                 word_to_shorten = random.choice(words)
