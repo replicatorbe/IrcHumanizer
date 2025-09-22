@@ -311,8 +311,8 @@ class IrcHumanizerBot:
             if self._nickname_matches_gender(self.config.nickname, profile.gender):
                 return self.config.nickname
         
-        # Utiliser le nom de la personnalité pour cohérence
-        base_name = profile.name
+        # Utiliser le nom de la personnalité pour cohérence (sans accents pour IRC)
+        base_name = self._remove_accents(profile.name)
         
         # Variations possibles du prénom pour IRC
         import random
@@ -324,6 +324,14 @@ class IrcHumanizerBot:
         ]
         
         return random.choice(variations)
+    
+    def _remove_accents(self, text: str) -> str:
+        """Supprime les accents pour compatibilité IRC"""
+        import unicodedata
+        # Normalise et supprime les accents
+        normalized = unicodedata.normalize('NFD', text)
+        without_accents = ''.join(char for char in normalized if unicodedata.category(char) != 'Mn')
+        return without_accents
     
     def _nickname_matches_gender(self, nickname: str, gender: str) -> bool:
         """Vérifie si un nickname correspond au genre"""
