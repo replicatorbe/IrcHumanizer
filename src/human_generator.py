@@ -147,6 +147,11 @@ class HumanResponseGenerator:
         if message.startswith('!') or message.startswith('/') or 'REACT' in message:
             return None
         
+        # Récupérer contexte récent pour détecter ambiances tendues
+        is_private = not target.startswith('#')
+        recent_history = self.memory.get_context_history(target, is_private, limit=5)
+        recent_context = " ".join([msg["message"] for msg in recent_history[-3:]])
+        
         # Parfois ne pas répondre du tout (simulation d'inattention) - mais pas si mentionné
         if not is_mentioned and random.random() < 0.2:
             return None
@@ -164,7 +169,7 @@ class HumanResponseGenerator:
             if friendly_greeting:
                 final_greeting = self.personality.adapt_response_style(friendly_greeting)
                 final_greeting = self.personality.adapt_response_with_mood(final_greeting)
-                final_greeting = self._add_human_touches(final_greeting)
+                final_greeting = self._add_human_touches(final_greeting, recent_context)
                 self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                       final_greeting, is_private, is_bot=True)
                 return final_greeting
@@ -175,7 +180,7 @@ class HumanResponseGenerator:
             if mention_response:
                 final_response = self.personality.adapt_response_style(mention_response)
                 final_response = self.personality.adapt_response_with_mood(final_response)
-                final_response = self._add_human_touches(final_response)
+                final_response = self._add_human_touches(final_response, recent_context)
                 self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                       final_response, is_private, is_bot=True)
                 return final_response
@@ -185,7 +190,7 @@ class HumanResponseGenerator:
         if contextual_reaction:
             final_reaction = self.personality.adapt_response_style(contextual_reaction)
             final_reaction = self.personality.adapt_response_with_mood(final_reaction)
-            final_reaction = self._add_human_touches(final_reaction)
+            final_reaction = self._add_human_touches(final_reaction, recent_context)
             self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                   final_reaction, is_private, is_bot=True)
             return final_reaction
@@ -196,7 +201,7 @@ class HumanResponseGenerator:
             if private_response:
                 final_response = self.personality.adapt_response_style(private_response)
                 final_response = self.personality.adapt_response_with_mood(final_response)
-                final_response = self._add_human_touches(final_response)
+                final_response = self._add_human_touches(final_response, recent_context)
                 self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                       final_response, is_private, is_bot=True)
                 return final_response
@@ -228,7 +233,7 @@ class HumanResponseGenerator:
                     # Adapter selon la personnalité, humeur et ajouter à la mémoire
                     human_response = self.personality.adapt_response_style(ai_response)
                     human_response = self.personality.adapt_response_with_mood(human_response)
-                    human_response = self._add_human_touches(human_response)
+                    human_response = self._add_human_touches(human_response, recent_context)
                     self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                           human_response, is_private, is_bot=True)
                     return human_response
@@ -246,7 +251,7 @@ class HumanResponseGenerator:
             # Appliquer personnalité + humeur + touches humaines
             response = self.personality.adapt_response_style(response)
             response = self.personality.adapt_response_with_mood(response)
-            response = self._add_human_touches(response)
+            response = self._add_human_touches(response, recent_context)
             self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
                                   response, is_private, is_bot=True)
             return response
@@ -260,7 +265,7 @@ class HumanResponseGenerator:
         # Appliquer personnalité + humeur + touches humaines
         response = self.personality.adapt_response_style(base_response)
         response = self.personality.adapt_response_with_mood(response)
-        response = self._add_human_touches(response)
+        response = self._add_human_touches(response, recent_context)
         
         # Ajouter à la mémoire
         self.memory.add_message(target, self.config.nickname if self.config else "Bot", 
@@ -292,7 +297,8 @@ Tu participes à une {context_type} et réponds naturellement.
 - Ne sois pas trop poli ou formel
 - Tiens compte de l'historique pour répondre de manière cohérente
 - Si on te demande ton âge, ta ville, tes goûts, réponds selon ta personnalité
-- Adapte ton niveau de langage selon ton score de décontraction"""
+- Adapte ton niveau de langage selon ton score de décontraction
+- IMPORTANT: Ne commence JAMAIS ton message par ton propre pseudo (ex: "Camille_42:"), écris directement ton message"""
             
             # Construire les messages avec historique
             messages = [{"role": "system", "content": system_prompt}]
@@ -324,6 +330,13 @@ Tu participes à une {context_type} et réponds naturellement.
             
             ai_text = response.choices[0].message.content.strip()
             
+            # Supprimer le pseudo si l'IA l'ajoute par erreur
+            nickname = self.config.nickname if self.config else "Bot"
+            if ai_text.startswith(f"{nickname}:"):
+                ai_text = ai_text[len(f"{nickname}:"):].strip()
+            elif ai_text.startswith(f"{nickname.lower()}:"):
+                ai_text = ai_text[len(f"{nickname.lower()}:"):].strip()
+            
             # Limiter la longueur pour rester naturel sur IRC
             if len(ai_text) > 150:
                 ai_text = ai_text[:147] + "..."
@@ -334,9 +347,19 @@ Tu participes à une {context_type} et réponds naturellement.
             self.logger.error(f"Erreur lors de l'appel à l'API OpenAI: {e}")
             return None
     
-    def _add_human_touches(self, text: str) -> str:
+    def _add_human_touches(self, text: str, recent_context: str = "") -> str:
         """Ajoute des imperfections humaines au texte"""
         result = text
+        
+        # Détecter contexte tendu/conflictuel pour adapter le style
+        tense_keywords = ["grillé", "griller", "accuse", "menteur", "fake", "bot", "faux", "arnaque", "suspect", "attention", "méfie"]
+        is_tense_context = any(keyword in text.lower() for keyword in tense_keywords) or \
+                          any(keyword in recent_context.lower() for keyword in tense_keywords)
+        
+        # Si contexte tendu, réduire les touches joyeuses
+        if is_tense_context:
+            # Pas d'emojis ni touches joyeuses en contexte tendu
+            return result
         
         # Appliquer des fautes de frappe aléatoires (plus fréquent pour naturel)
         if random.random() < 0.4:  # 40% de chance d'avoir des fautes

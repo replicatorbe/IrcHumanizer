@@ -311,8 +311,8 @@ class IrcHumanizerBot:
             if self._nickname_matches_gender(self.config.nickname, profile.gender):
                 return self.config.nickname
         
-        # Sinon générer un nickname approprié au genre
-        base_name = self._get_gender_appropriate_name(profile.gender)
+        # Utiliser le nom de la personnalité pour cohérence
+        base_name = profile.name
         
         # Variations possibles du prénom pour IRC
         import random
@@ -336,7 +336,8 @@ class IrcHumanizerBot:
             "Kevin", "Jeremy", "Florian", "Damien", "Cedric", "Gregory",
             "Mathieu", "Benjamin", "Lucas", "Hugo", "Leo", "Nathan", "Noah",
             "Arthur", "Louis", "Gabriel", "Raphael", "Adam", "Victor", "Jules",
-            "Theo", "Ethan", "Nolan", "Clement", "Oscar", "Aaron", "Diego"
+            "Theo", "Ethan", "Nolan", "Clement", "Oscar", "Aaron", "Diego",
+            "Enzo", "Tom"
         ]
         
         female_names = [
@@ -346,7 +347,8 @@ class IrcHumanizerBot:
             "Laurence", "Veronique", "Virginie", "Corinne", "Delphine", "Martine",
             "Emma", "Jade", "Louise", "Alice", "Chloe", "Lina", "Lea", "Manon",
             "Clara", "Camille", "Sarah", "Ines", "Zoe", "Lily", "Elena", "Mia",
-            "Nina", "Rose", "Anna", "Lola", "Eva", "Noa", "Romy", "Mila", "Lou"
+            "Nina", "Rose", "Anna", "Lola", "Eva", "Noa", "Romy", "Mila", "Lou",
+            "Julia", "Jeanne", "Margot", "Adèle"
         ]
         
         # Nettoyer le nickname (enlever chiffres et underscores)

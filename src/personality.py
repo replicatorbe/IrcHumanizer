@@ -323,8 +323,8 @@ Style d'écriture préféré: {', '.join(p.writing_styles)}
             if random.random() < 0.4:  # 40% de chance d'appliquer le style
                 result = self._apply_writing_style(result, style)
         
-        # Ajouter parfois un emoji selon la personnalité
-        if random.random() < (self.profile.humor_level * 0.3):
+        # Ajouter parfois un emoji selon la personnalité (réduit pour naturel)
+        if random.random() < (self.profile.humor_level * 0.1):
             emoji = random.choice(self.profile.preferred_emojis)
             if random.random() < 0.5:
                 result = f"{result} {emoji}"
@@ -487,8 +487,8 @@ Style d'écriture préféré: {', '.join(p.writing_styles)}
                 result = " ".join(words[:len(words)//2]) if len(words) > 3 else result
         
         elif self.profile.current_mood == "excited":
-            # Plus d'émojis et de ponctuation
-            if random.random() < 0.4:
+            # Plus d'émojis et de ponctuation (réduit)
+            if random.random() < 0.2:
                 excited_emojis = ["!", "!!", " 🔥", " 💯", " 😎", " ✨"]
                 result += random.choice(excited_emojis)
         
